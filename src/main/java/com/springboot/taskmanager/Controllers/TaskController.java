@@ -4,6 +4,7 @@ import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
 import com.springboot.taskmanager.Dto.TaskResponse;
@@ -70,7 +72,24 @@ public class TaskController {
 
     @PutMapping("/update-task/{taskId}")
     public ResponseEntity<MessageInfo> updateTask(@PathVariable("taskId") String taskId,@RequestBody TaskDetails taskDetails){
-        taskService.updateTask(taskId,taskDetails);
-        return null;
+        return taskService.updateTask(taskId,taskDetails);
     }
+    
+    @DeleteMapping("/delete-user/{username}")
+    public ResponseEntity<MessageInfo> deleteUser(@PathVariable("username")String username){
+        return taskService.deleteUser(username);
+    }
+
+    @DeleteMapping("/delete-task")
+    public ResponseEntity<MessageInfo> deleteTask(@RequestBody DeleteTasksRequest tasksIds){
+        return taskService.deleteTasks(tasksIds);
+    }
+
+
+
+
+
+
+
+
 }

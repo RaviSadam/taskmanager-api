@@ -8,11 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.springboot.taskmanager.Models.Tasks;
 import com.springboot.taskmanager.Projections.TaskDetailsProjections;
 
-import jakarta.transaction.Transactional;
 
 public interface TaskRepository extends JpaRepository<Tasks,String>{
 
@@ -46,39 +46,62 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
     public List<TaskDetailsProjections> findTasksByUsername(@Param("username") String username,Pageable page);
 
 
-    @Query(value="SELECT COUNT(*) FROM task_manager.tasks t" + 
-                  "WHERE t.owner=:username AND t.task_id=:taskId" + 
-                  "GROUP BY t.task_id",
-                nativeQuery = true)
+    @Query(value="SELECT COUNT(*) FROM tasks t " +
+           "WHERE t.owner = :username AND t.task_id = :taskId " +
+           "GROUP BY t.task_id",nativeQuery=true)
     public int countTasksWithTaskIdAndUsername(@Param("taskId") String taskId,@Param("username") String username);
 
 
     @Modifying
     @Transactional
-    @Query(value="UPDATE Tasks t" +
-                "SET"+
-                "t.visibility = IF(:visibility IS NULL, t.visibility, :visibility),"+
-                "t.updatedDate=:date"+
-                "WHERE"+
-                "t.taskId = :taskId AND t.owner = :owner;")
-    
-    public void updateTaskVisibility(@Param("taskId") String taskId,@Param("owner") String username,@Param("visibility") String visibility,@Param("date")Date date);
+    @Query(value = "UPDATE tasks t " +
+            "SET " +
+            "t.visibility = COALESCE(:visibility, t.visibility)," +
+            "t.updated_date=:date "+
+            "WHERE " +
+            "t.task_id = :taskId AND t.owner = :owner",
+            nativeQuery = true)
+    public void updateTaskVisibility(
+            @Param("taskId") String taskId,
+            @Param("owner") String username,
+            @Param("visibility") String visibility,
+            @Param("date") Date date);
 
 
 
     @Modifying
     @Transactional
-    @Query(value="UPDATE Tasks t" +
-                "SET"+
-                "t.visibility = IF(:visibility IS NULL, t.visibility, :visibility),"+
-                "t.priority = IF(:priority IS NULl , t.priority,:priority)"+
-                "t.status = IF(:staus IS NULL,t.staus,:status)"+
-                "t.description=IF(:description IS NULL, t.description,:description)"+
-                "t.dueDate = IF(:duedate IS NULL,t.dueDate,:duedate)"+
-                "t.updatedDate=:date"+
-                "WHERE"+
-                "t.taskId = :taskId AND t.owner = :owner;")
-    
-    public void updateTask(@Param("taskId") String taskId,@Param("owner") String username,@Param("visibility") String visibility,@Param("status") String status,@Param("priority") String priority,@Param("description")String description,@Param("duedate")Date dueDate,@Param("date")Date date);
+    @Query(value = "UPDATE tasks t " +
+            "SET " +
+            "t.visibility = COALESCE(:visibility, t.visibility), " +
+            "t.priority = COALESCE(:priority, t.priority), " +
+            "t.status = COALESCE(:status, t.status), " +
+            "t.description = COALESCE(:description, t.description), " +
+            "t.due_date = COALESCE(:duedate, t.due_date)," +
+            "t.updated_date=:date "+
+            "WHERE " +
+            "t.task_id = :taskId AND t.owner = :owner",
+            nativeQuery = true)
+    public void updateTask(
+            @Param("taskId") String taskId,
+            @Param("owner") String username,
+            @Param("visibility") String visibility,
+            @Param("status") String status,
+            @Param("priority") String priority,
+            @Param("description") String description,
+            @Param("duedate") Date dueDate,
+            @Param("date") Date date
+        );
+
+    @Modifying
+    @Transactional
+    @Query(value="DELETE FROM tasks t WHERE t.owner=:owner OR t.task_id IN :taskIds",nativeQuery = true)
+    public void deleteTasksByOwnerOrTaskid(@Param("owner")String owner,@Param("taskIds") List<String> taskId);
+
+
+    @Modifying
+    @Transactional
+    @Query(value="DELETE tf FROM task_files tf JOIN tasks t on t.task_id=tf.task_id WHERE  t.owner=:owner",nativeQuery = true)
+    public void deleteTaskFilesByOwnerOrTaskId(@Param("owner")String owner,@Param("taskIds") List<String> taskId);
 
 }

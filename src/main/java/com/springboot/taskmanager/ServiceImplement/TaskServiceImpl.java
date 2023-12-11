@@ -16,13 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
 import com.springboot.taskmanager.Dto.TaskResponse;
 import com.springboot.taskmanager.Dto.UserDataDto;
+import com.springboot.taskmanager.Dto.UserRegistration;
 import com.springboot.taskmanager.ExceptionHandlers.NotFoundException;
 import com.springboot.taskmanager.Models.Priority;
 import com.springboot.taskmanager.Models.Status;
@@ -45,6 +49,37 @@ public class TaskServiceImpl implements TaskService{
     private String fileDirectory;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+
+
+    @Override
+    public ResponseEntity<MessageInfo> deleteTasks(DeleteTasksRequest deleteTasksRequest){
+        taskRepository.deleteTaskFilesByOwnerOrTaskId(this.getLoggedinUserName(), deleteTasksRequest.getTaskIds());
+        taskRepository.deleteTasksByOwnerOrTaskid(this.getLoggedinUserName(), deleteTasksRequest.getTaskIds());
+        return ResponseEntity.ok().body(new MessageInfo("Tasks deleted", this.getDate()));
+    }
+
+
+    @Override
+    @PreAuthorize("#username==principal.username OR hasRole('ADMIN')")
+    @Transactional
+    public ResponseEntity<MessageInfo> deleteUser(String username){
+        long cnt=userRepository.countByUsernameOrEmail(username,username);
+        if(cnt!=1)
+            throw new UsernameNotFoundException("User not found");
+        taskRepository.deleteTaskFilesByOwnerOrTaskId(username,null);
+        System.out.println("Task Files deleted");
+        taskRepository.deleteTasksByOwnerOrTaskid(username,null);
+        System.out.println("User tasks deleted");
+        userRepository.deleteUser(username);
+        return ResponseEntity.ok().body(new MessageInfo("User deleted",this.getDate()));
+    }
+
+
+    @PreAuthorize("#username=principal.username OR hasRole('ADMIN')")
+    @Override
+    public ResponseEntity<MessageInfo> updateUser(String username,UserRegistration userRegistration){
+        return null;
+    }
 
 
     @Override
@@ -74,16 +109,21 @@ public class TaskServiceImpl implements TaskService{
             else
                 status=Status.EXPIRED.name();
         }
+        Date date=null;
+        if(taskDetails.getDueDate()!=null)
+            date=new Date(taskDetails.getDueDate().getTime());
 
-        taskRepository.updateTask(taskId, this.getLoggedinUserName(), visibility, status, priority, taskDetails.getDescription(), new Date(taskDetails.getDueDate().getTime()), new Date(System.currentTimeMillis()));
-        return ResponseEntity.ok().body(new MessageInfo("Task Updates", new java.util.Date(System.currentTimeMillis())));
+        taskRepository.updateTask(taskId, this.getLoggedinUserName(), visibility, status, priority, taskDetails.getDescription(), date,this.getDate());
+        return ResponseEntity.ok().body(new MessageInfo("Task Updated", new java.util.Date(System.currentTimeMillis())));
     }
 
 
 
     @Override
     public ResponseEntity<MessageInfo> updateVisibility(String taskId, int visibi){
+        System.out.println("OK");
         int count=taskRepository.countTasksWithTaskIdAndUsername(taskId,this.getLoggedinUserName());
+        System.out.println("OK2");
         if(count==0)
             throw new NotFoundException("Task not found with given task Id or your not owner of task");
         String visibility=null;
@@ -93,7 +133,14 @@ public class TaskServiceImpl implements TaskService{
             visibility=Visibility.PUBLIC.name();
         else
             visibility=Visibility.SPECIFIC.name();
-        taskRepository.updateTaskVisibility(taskId,this.getLoggedinUserName(),visibility,new Date(System.currentTimeMillis()));
+        try{    
+            System.out.println("ok3");
+            taskRepository.updateTaskVisibility(taskId,this.getLoggedinUserName(),visibility,this.getDate());
+            System.out.println("ok4");
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+        }
         return ResponseEntity.ok().body(new MessageInfo("Task Visibility chnaged", new Date(System.currentTimeMillis())));
     }
 
@@ -102,7 +149,7 @@ public class TaskServiceImpl implements TaskService{
     @RolesAllowed({"ADMIN"})
     public Set<UserDataDto> getUserAllUserDetails(int pageNumber,int pageSize){
         Pageable page=PageRequest.of(pageNumber, pageSize);
-        Set<UserDetailsProjection> userDetailsProjections=userRepository.getAllUsers(page);
+        List<UserDetailsProjection> userDetailsProjections=userRepository.getAllUsers(page);
         Set<UserDataDto> userDataDtos=new HashSet<>();
         for(UserDetailsProjection userDetailsProjection:userDetailsProjections){
                 userDataDtos.add(
@@ -248,5 +295,8 @@ public class TaskServiceImpl implements TaskService{
     //return logged in username
     private String getLoggedinUserName(){
         return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
+    private Date getDate(){
+        return new Date(System.currentTimeMillis());
     }
 }

@@ -4,10 +4,12 @@ import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
 
+import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
 import com.springboot.taskmanager.Dto.TaskResponse;
 import com.springboot.taskmanager.Dto.UserDataDto;
+import com.springboot.taskmanager.Dto.UserRegistration;
 
 public interface TaskService {
 
@@ -28,6 +30,15 @@ public interface TaskService {
     //updates the visibility
     public ResponseEntity<MessageInfo> updateVisibility(String taskId, int visibility);
 
-    //update status and priority
+    //update task details
     public ResponseEntity<MessageInfo> updateTask(String taskId,TaskDetails taskDetails);
+
+    //update user details
+    public ResponseEntity<MessageInfo> updateUser(String username,UserRegistration userRegistration);
+
+    //deletes user and corresponding user tasks and files
+    public ResponseEntity<MessageInfo> deleteUser(String username);
+
+    public ResponseEntity<MessageInfo> deleteTasks(DeleteTasksRequest tasksIds);
+
 }

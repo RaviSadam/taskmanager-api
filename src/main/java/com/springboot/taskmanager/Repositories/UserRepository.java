@@ -1,6 +1,7 @@
 package com.springboot.taskmanager.Repositories;
 
 import java.sql.Date;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
@@ -45,10 +46,16 @@ public interface UserRepository extends JpaRepository<User,java.lang.String> {
             "GROUP BY u.username")
     public UserDetailsProjection getUserDetails(@Param("username") String username);
 
-    @Query("SELECT u.username AS username,u.firstName AS firstname,u.lastName AS lastname,u.createdDate AS createddate,u.email AS email,COUNT(t.taskId) AS taskcount"+
+    @Query("SELECT u.username AS username, u.firstName AS firstname, u.lastName AS lastname, u.createdDate AS createddate, u.email AS email, COUNT(t.taskId) AS taskcount " +
             "FROM User u " +
             "JOIN u.tasks t " +
             "GROUP BY u.username")
-    public Set<UserDetailsProjection> getAllUsers(Pageable page); 
+    public List<UserDetailsProjection> getAllUsers(Pageable page);
+
+
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM User u WHERE u.username=:username")
+    public void deleteUser(@Param("username")String username);
 }
 
