@@ -2,6 +2,7 @@ package com.springboot.taskmanager.Repositories;
 
 import java.sql.Date;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.springboot.taskmanager.Models.Tasks;
 import com.springboot.taskmanager.Projections.TaskDetailsProjections;
+import com.springboot.taskmanager.Projections.TaskVisibilityProjection;
 
 
 public interface TaskRepository extends JpaRepository<Tasks,String>{
@@ -41,7 +43,7 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
 
 
     @Query(value ="SELECT created_date AS createddate,description AS description,due_date AS duedate,task_name AS taskname,priority AS priority,status AS status,updated_date AS updateddate,visibility AS visibility,owner AS owner FROM tasks WHERE owner=:username",
-            countQuery = "SELECT COUNT(*) FROM tasks WHERE owner=:username",
+            countQuery = "SELECT COUNT(*) FROM tasks WHERE owner=:username GROUP BY owner",
             nativeQuery=true)
     public List<TaskDetailsProjections> findTasksByUsername(@Param("username") String username,Pageable page);
 
@@ -59,10 +61,10 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
             "t.visibility = COALESCE(:visibility, t.visibility)," +
             "t.updated_date=:date "+
             "WHERE " +
-            "t.task_id = :taskId AND t.owner = :owner",
+            "t.task_id IN :taskIds AND t.owner = :owner",
             nativeQuery = true)
     public void updateTaskVisibility(
-            @Param("taskId") String taskId,
+            @Param("taskIds") List<String> taskIds,
             @Param("owner") String username,
             @Param("visibility") String visibility,
             @Param("date") Date date);
@@ -93,15 +95,43 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
             @Param("date") Date date
         );
 
+
+    //delete tasks by using task ids
     @Modifying
     @Transactional
-    @Query(value="DELETE FROM tasks t WHERE t.owner=:owner OR t.task_id IN :taskIds",nativeQuery = true)
-    public void deleteTasksByOwnerOrTaskid(@Param("owner")String owner,@Param("taskIds") List<String> taskId);
+    @Query(value="DELETE FROM tasks t WHERE t.task_id IN :taskIds AND t.owner=:owner",nativeQuery = true)
+    public void deleteTasksByTaskid(@Param("owner")String owner,@Param("taskIds") List<String> taskId);
+
+
+    @Modifying
+    @Transactional
+    @Query(value="DELETE tf FROM task_files tf JOIN tasks t on t.task_id=tf.task_id WHERE t.task_id IN :taskIds AND t.owner=:owner",nativeQuery = true)
+    public void deleteTaskFilesByTaskId(@Param("owner")String owner,@Param("taskIds") List<String> taskId);
+
+
+    //delete tasks by username
+    @Modifying
+    @Transactional
+    @Query(value="DELETE FROM tasks t WHERE t.owner=:owner",nativeQuery = true)
+    public void deleteTasksByOwner(@Param("owner")String owner);
 
 
     @Modifying
     @Transactional
     @Query(value="DELETE tf FROM task_files tf JOIN tasks t on t.task_id=tf.task_id WHERE  t.owner=:owner",nativeQuery = true)
-    public void deleteTaskFilesByOwnerOrTaskId(@Param("owner")String owner,@Param("taskIds") List<String> taskId);
+    public void deleteTaskFilesByOwner(@Param("owner")String owner);
+
+
+    @Query("SELECT t.visibility AS visibility FROM Tasks t WHERE t.taskId IN :taskIds")
+    public List<TaskVisibilityProjection> getTasksVisibility(@Param("taskIds") Set<String> taskIds);
+
+
+//     @Query()
+//     public List<TaskDetailsProjections> getUserAccessedTasks(Pageable page);
+    
+    @Modifying
+    @Transactional
+    @Query(value = "CALL user_tasks_access_table (:usernames,:taskId)", nativeQuery = true)
+    public void insertUserTasksAccess(@Param("usernames") String usernames, @Param("taskId") String taskId);
 
 }

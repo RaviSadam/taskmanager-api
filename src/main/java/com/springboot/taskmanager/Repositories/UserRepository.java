@@ -14,6 +14,7 @@ import com.springboot.taskmanager.Models.User;
 import com.springboot.taskmanager.Projections.RolesProjection;
 import com.springboot.taskmanager.Projections.UserAuthProjection;
 import com.springboot.taskmanager.Projections.UserDetailsProjection;
+import com.springboot.taskmanager.Projections.UserIdsProjection;
 
 import jakarta.transaction.Transactional;
 
@@ -27,6 +28,10 @@ public interface UserRepository extends JpaRepository<User,java.lang.String> {
     @Transactional
     @Query(value="INSERT INTO users (username,email,password,first_name,last_name,created_date) VALUES(:username,:email,:password,:first_name,:last_name,:created_date)",nativeQuery=true)
     public void  addUser(@Param("username") String username,@Param("email")String email,@Param("password") String password,@Param("first_name") String firstName,@Param("last_name") String lastName,@Param("created_date")Date date);
+
+
+    @Query("SELECT u.username AS username,u.email AS email,u.firstName as firstname,u.lastName AS lastname FROM User u")
+    public List<UserIdsProjection> getUserIds(Pageable page);
 
     @Modifying
     @Transactional

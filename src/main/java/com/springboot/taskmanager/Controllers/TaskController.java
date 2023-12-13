@@ -18,7 +18,9 @@ import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
 import com.springboot.taskmanager.Dto.TaskResponse;
+import com.springboot.taskmanager.Dto.TaskUserAccessUpdate;
 import com.springboot.taskmanager.Dto.UserDataDto;
+import com.springboot.taskmanager.Dto.UserIdsDto;
 import com.springboot.taskmanager.Services.TaskService;
 
 import lombok.RequiredArgsConstructor;
@@ -53,6 +55,13 @@ public class TaskController {
     public ResponseEntity<UserDataDto> getUser(@RequestParam(value="username",required = false)String username){
         return taskService.getUserDetails(username);
     }
+    @GetMapping("/get-user-ids")
+    public ResponseEntity<Set<UserIdsDto>> getUserIds(
+        @RequestParam(value="pageNumber",required = false,defaultValue = "0") int pageNumber,
+        @RequestParam(value="pageSize",required = false,defaultValue = "10")int pageSize
+    ){
+        return  taskService.getUserIds(pageNumber, pageSize);
+    }
     @GetMapping("/get-users")
     public ResponseEntity<Set<UserDataDto>> getUsers(
         @RequestParam(value="pageNumber",required = false,defaultValue = "0") int pageNumber,
@@ -60,19 +69,32 @@ public class TaskController {
         return ResponseEntity.ok().body(taskService.getUserAllUserDetails(pageNumber,pageSize));
     }
 
+
+    @GetMapping("/get-assess-tasks")
+    public ResponseEntity<Set<TaskResponse>> getAccessTasks(
+        @RequestParam(value="pageNumber",required = false,defaultValue = "0") int pageNumber,
+        @RequestParam(value="pageSize",required = false,defaultValue = "10")int pageSize
+    ){
+        return taskService.getAccessTasks(pageNumber, pageSize);
+    }
+
     @PostMapping("/add-task")
     public ResponseEntity<MessageInfo> addTask(@RequestBody TaskDetails taskDetails){
         return taskService.addTask(taskDetails);
     }
 
-    @PutMapping("/update-visibility/{taskId}")
-    public ResponseEntity<MessageInfo> updateVisibility(@PathVariable("taskId")String taskId,@RequestParam("visibility")int visibility){
-        return taskService.updateVisibility(taskId,visibility);
+    @PutMapping("/update-visibility")
+    public ResponseEntity<MessageInfo> updateVisibility(@RequestBody DeleteTasksRequest deleteTasksRequest,@RequestParam(value="visibility",required = false,defaultValue = "2")int visibility){
+        return taskService.updateVisibility(deleteTasksRequest,visibility);
     }
 
     @PutMapping("/update-task/{taskId}")
     public ResponseEntity<MessageInfo> updateTask(@PathVariable("taskId") String taskId,@RequestBody TaskDetails taskDetails){
         return taskService.updateTask(taskId,taskDetails);
+    }
+    @PutMapping("/update-access")
+    public ResponseEntity<MessageInfo> updateUserTaskAccess(@RequestBody TaskUserAccessUpdate taskUserAccessUpdate){
+        return taskService.updateUserTaskAccess(taskUserAccessUpdate);
     }
     
     @DeleteMapping("/delete-user/{username}")
@@ -84,12 +106,5 @@ public class TaskController {
     public ResponseEntity<MessageInfo> deleteTask(@RequestBody DeleteTasksRequest tasksIds){
         return taskService.deleteTasks(tasksIds);
     }
-
-
-
-
-
-
-
 
 }

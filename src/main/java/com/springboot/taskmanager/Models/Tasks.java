@@ -17,8 +17,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
@@ -86,8 +87,15 @@ public class Tasks {
     private User owner;
 
     //assess to specific people
-    @OneToMany(mappedBy = "tasksAccess",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @ManyToMany(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    @JoinTable(
+        name="user_tasks_access",
+        joinColumns = {
+            @JoinColumn(name="task_id",referencedColumnName = "task_id")
+        },
+        inverseJoinColumns={
+            @JoinColumn(name="username",referencedColumnName = "username")
+        }
+    )
     private Set<User> accessTo=new HashSet<>();
-    
-
 }

@@ -18,7 +18,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
@@ -83,9 +82,8 @@ public class User implements UserDetails{
     private Set<Tasks> tasks;
     
     //access to another tasks
-    @ManyToOne(cascade = CascadeType.ALL,fetch = FetchType.LAZY)
-    @JoinColumn(name="access_task_id",referencedColumnName = "task_id")
-    private Tasks tasksAccess;
+    @ManyToMany(mappedBy = "accessTo" ,cascade = CascadeType.ALL,fetch = FetchType.LAZY)
+    private Set<Tasks> tasksAccess;
 
     @JsonIgnore
     @Override

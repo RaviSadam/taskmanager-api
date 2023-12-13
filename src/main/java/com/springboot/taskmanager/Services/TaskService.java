@@ -3,12 +3,13 @@ package com.springboot.taskmanager.Services;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
-
 import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
 import com.springboot.taskmanager.Dto.TaskResponse;
+import com.springboot.taskmanager.Dto.TaskUserAccessUpdate;
 import com.springboot.taskmanager.Dto.UserDataDto;
+import com.springboot.taskmanager.Dto.UserIdsDto;
 import com.springboot.taskmanager.Dto.UserRegistration;
 
 public interface TaskService {
@@ -28,7 +29,7 @@ public interface TaskService {
     public Set<UserDataDto> getUserAllUserDetails(int pageNumber,int pageSize);
 
     //updates the visibility
-    public ResponseEntity<MessageInfo> updateVisibility(String taskId, int visibility);
+    public ResponseEntity<MessageInfo> updateVisibility(DeleteTasksRequest deleteTasksRequest, int visibility);
 
     //update task details
     public ResponseEntity<MessageInfo> updateTask(String taskId,TaskDetails taskDetails);
@@ -39,6 +40,15 @@ public interface TaskService {
     //deletes user and corresponding user tasks and files
     public ResponseEntity<MessageInfo> deleteUser(String username);
 
+    //delete tasks by user name
     public ResponseEntity<MessageInfo> deleteTasks(DeleteTasksRequest tasksIds);
+
+    //returns the user ids with size
+    public ResponseEntity<Set<UserIdsDto>> getUserIds(int pageNumber,int pageSize);
+
+    //returns the user others task details whose he has access
+    public ResponseEntity<Set<TaskResponse>> getAccessTasks(int pageNumber,int pageSize);
+
+    public ResponseEntity<MessageInfo> updateUserTaskAccess(TaskUserAccessUpdate taskUserAccessUpdate);
 
 }
