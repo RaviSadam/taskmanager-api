@@ -8,13 +8,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.springboot.taskmanager.Models.Tasks;
 import com.springboot.taskmanager.Projections.TaskDetailsProjections;
 import com.springboot.taskmanager.Projections.TaskVisibilityProjection;
-
 
 public interface TaskRepository extends JpaRepository<Tasks,String>{
 
@@ -150,4 +150,7 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
                     "WHERE ut.username=:username ", nativeQuery=true)
     public List<TaskDetailsProjections> getAllAccessedTasksForExport(@Param("username")String usrename);
 
+    //updates the task status to EXPIRED
+    @Procedure(name = "updateStatusOfTasks",procedureName = "updateStatusOfTasks")
+    int updateStatusOfTasks();
 }

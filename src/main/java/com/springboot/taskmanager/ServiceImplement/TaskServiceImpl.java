@@ -107,6 +107,11 @@ public class TaskServiceImpl implements TaskService{
     }
 
     @Override
+    public ResponseEntity<MessageInfo> updateStatus(DeleteTasksRequest deleteTasksRequest, int status){
+        return null;
+    }
+
+    @Override
     public void getExcelSheetOfTasks(HttpServletResponse response){
         List<TaskDetailsProjections> taskDetailsProjections2=taskRepository.getAllAccessedTasksForExport(this.getLoggedinUserName());
         List<TaskDetailsProjections> taskDetailsProjections1=taskRepository.getAllTasksForExporting(this.getLoggedinUserName());
@@ -345,7 +350,7 @@ public class TaskServiceImpl implements TaskService{
 
 
     @Override
-    public ResponseEntity<MessageInfo> addTask(TaskDetails taskDetails){
+    public ResponseEntity<MessageInfo> addTask(TaskDetails taskDetails,MultipartFile file){
         // MultipartFile multipartFile=null;
         String taskId="Task-"+this.getUuid(),username=this.getLoggedinUserName();
         
@@ -367,12 +372,11 @@ public class TaskServiceImpl implements TaskService{
         else
             visibility=Visibility.SPECIFIC.name();
         try{
-            // if(multipartFile!=null){
-            //     String fileName=this.fileProcess(multipartFile);
-            //     //saving file name in DB
-            //     taskRepository.addTaskAttachments(taskId, fileName);
-            // }
-            //adding task data to DB
+            if(file!=null){
+                String fileName=this.fileProcess(file);
+                //saving file name in DB
+                taskRepository.addTaskAttachments(taskId, fileName);
+            }
             taskRepository.addTask(taskId, new Date(System.currentTimeMillis()), taskDetails.getDescription(), new Date(taskDetails.getDueDate().getTime()), taskDetails.getTaskName(), priority, taskDetails.isSendNotifications(), Status.NOT_COMPLETED.toString(), new Date(System.currentTimeMillis()), visibility, username);
         }
         catch(Exception ex){}
@@ -388,7 +392,7 @@ public class TaskServiceImpl implements TaskService{
             String filename=multipartFile.getOriginalFilename();
             if(filename!=null)
                 fileExtension=filename.split(".")[1];
-            path=Path.of(fileDirectory+fileName+"."+fileExtension);
+            path=Path.of(fileDirectory+"$$"+fileName+"."+fileExtension);
             multipartFile.transferTo(path);
             return fileName+"."+fileExtension;
         } catch (IllegalStateException | IOException |NullPointerException e) {

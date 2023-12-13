@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
@@ -26,9 +28,6 @@ import com.springboot.taskmanager.Services.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
-
-// org.springframework.web.servlet.resource.NoResourceFoundException:
-// org.springframework.web.HttpRequestMethodNotSupportedException:
 
 @Controller
 @ResponseBody
@@ -79,9 +78,24 @@ public class TaskController {
         return taskService.getAccessTasks(pageNumber, pageSize);
     }
 
+    @GetMapping("/export-tasks")
+    public  void getExcelSheetOfTasks(HttpServletResponse response) throws IOException{
+        System.out.println(taskService.getLoggedinUserName());
+        String fileName=taskService.getLoggedinUserName()+".xlsx";
+        taskService.getExcelSheetOfTasks(response);
+
+        
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+       
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=users_" + fileName;
+        response.setHeader(headerKey, headerValue);
+        return; 
+    }
+
     @PostMapping("/add-task")
-    public ResponseEntity<MessageInfo> addTask(@RequestBody TaskDetails taskDetails){
-        return taskService.addTask(taskDetails);
+    public ResponseEntity<MessageInfo> addTask(@RequestBody TaskDetails taskDetails,MultipartFile file){
+        return taskService.addTask(taskDetails,file);
     }
 
     @PutMapping("/update-visibility")
@@ -107,19 +121,4 @@ public class TaskController {
     public ResponseEntity<MessageInfo> deleteTask(@RequestBody DeleteTasksRequest tasksIds){
         return taskService.deleteTasks(tasksIds);
     }
-    @GetMapping("/export-tasks")
-    public  void getExcelSheetOfTasks(HttpServletResponse response) throws IOException{
-        System.out.println(taskService.getLoggedinUserName());
-        String fileName=taskService.getLoggedinUserName()+".xlsx";
-        taskService.getExcelSheetOfTasks(response);
-
-        
-        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-       
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=users_" + fileName;
-        response.setHeader(headerKey, headerValue);
-        return; 
-    }
-
 }

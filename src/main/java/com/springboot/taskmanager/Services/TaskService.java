@@ -3,6 +3,8 @@ package com.springboot.taskmanager.Services;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
@@ -17,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public interface TaskService {
 
     //addes new task to db
-    public ResponseEntity<MessageInfo> addTask(TaskDetails taskDetails);
+    public ResponseEntity<MessageInfo> addTask(TaskDetails taskDetails,MultipartFile file);
 
     //gives the details of task based on task id
     public TaskResponse  getTaskDetails(String taskId);
@@ -32,6 +34,9 @@ public interface TaskService {
 
     //updates the visibility
     public ResponseEntity<MessageInfo> updateVisibility(DeleteTasksRequest deleteTasksRequest, int visibility);
+
+    //updates the status of task
+    public ResponseEntity<MessageInfo> updateStatus(DeleteTasksRequest deleteTasksRequest, int status);
 
     //update task details
     public ResponseEntity<MessageInfo> updateTask(String taskId,TaskDetails taskDetails);
@@ -51,11 +56,14 @@ public interface TaskService {
     //returns the user others task details whose he has access
     public ResponseEntity<Set<TaskResponse>> getAccessTasks(int pageNumber,int pageSize);
 
+    //gives the access task access to users
     public ResponseEntity<MessageInfo> updateUserTaskAccess(TaskUserAccessUpdate taskUserAccessUpdate);
 
+    //give tasks as excel sheet
     public void getExcelSheetOfTasks(HttpServletResponse response);
 
     //return user name
     public String getLoggedinUserName();
 
+    
 }

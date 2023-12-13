@@ -3,69 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Export Tasks</title>
+    <title>Task Form</title>
 </head>
 <body>
 
-    <h1>Task Exporter</h1>
-
-    <button onclick="exportTasks()">Export Data</button>
-
-    <script>
-        function exportTasks() {
-            // Replace 'YOUR_TOKEN_HERE' with your actual token
-            const token = 'eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6IltVU0VSXSIsInN1YiI6InJhbWE5Mzk4IiwiaWF0IjoxNzAyNDQ2NTk3LCJleHAiOjE3MDI2MTkzOTd9.KPGAZL3MkuazYTJSG2OqWqOT4Z0qx1FKHfKnSXGCr-E';
-            const url = 'http://localhost:8080/task/export-tasks';
-
-            // Create a new XMLHttpRequest object
-            const xhr = new XMLHttpRequest();
-
-            // Open a GET request to the specified URL
-            xhr.open('GET', url, true);
-
-            // Set the authorization header with the bearer token
-            xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-
-            // Set the callback function to handle the response
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                        // Parse the response as a Blob
-                        const blob = new Blob([xhr.response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-                        // Create a link element
-                        const link = document.createElement('a');
-                        link.href = window.URL.createObjectURL(blob);
-
-                        // Set the download attribute with the desired file name
-                        link.download = 'exported_tasks.xlsx';
-
-                        // Append the link to the document
-                        document.body.appendChild(link);
-
-                        // Trigger the click event on the link to start the download
-                        link.click();
-
-                        // Remove the link from the document
-                        document.body.removeChild(link);
-                    } else {
-                        console.error('Error exporting data:', xhr.statusText);
-                        // Handle the error
-                    }
-                }
-            };
-
-            // Set the responseType to 'arraybuffer' for binary data
-            xhr.responseType = 'arraybuffer';
-
-            // Send the GET request
-            xhr.send();
-        }
-    </script>
-
-<!-- Code injected by live-server -->
 <script>
-	// ... (the rest of your live-server code)
+    function submitForm() {
+        var form = document.getElementById('taskForm');
+        var formData = new FormData(form);
+
+        fetch('http://localhost:8080/task/add-task', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6IltVU0VSXSIsInN1YiI6InJhbWE5Mzk4IiwiaWF0IjoxNzAyNDQ2NTk3LCJleHAiOjE3MDI2MTkzOTd9.KPGAZL3MkuazYTJSG2OqWqOT4Z0qx1FKHfKnSXGCr-E',
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            // Handle the response here
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // Handle errors here
+        });
+    }
 </script>
+
+<form id="taskForm" onsubmit="submitForm(); return false;" enctype="multipart/form-data">
+    <!-- Task Name -->
+    <label for="taskName">Task Name:</label>
+    <input type="text" id="taskName" name="taskname" required>
+    <br>
+
+    <!-- Due Date -->
+    <label for="dueDate">Due Date:</label>
+    <input type="text" id="dueDate" name="duedate" required>
+    <!-- You can use a date picker or another appropriate input type for the due date -->
+    <br>
+
+    <!-- Description -->
+    <label for="description">Description:</label>
+    <textarea id="description" name="description"></textarea>
+    <br>
+
+    <!-- Priority -->
+    <label for="priority">Priority:</label>
+    <input type="number" id="priority" name="priority">
+    <br>
+
+    <!-- Send Notifications -->
+    <label for="sendNotifications">Send Notifications:</label>
+    <input type="checkbox" id="sendNotifications" name="sendnotifications">
+    <br>
+
+    <!-- Status -->
+    <label for="status">Status:</label>
+    <input type="number" id="status" name="status">
+    <br>
+
+    <!-- Visibility -->
+    <label for="visibility">Visibility:</label>
+    <input type="number" id="visibility" name="visibility">
+    <br>
+
+    <!-- File Upload -->
+    <label for="file">File:</label>
+    <input type="file" id="file" name="file">
+    <br>
+
+    <!-- No need to include Authorization input field -->
+
+    <!-- Submit Button -->
+    <input type="submit" value="Submit">
+</form>
+
 </body>
 </html>

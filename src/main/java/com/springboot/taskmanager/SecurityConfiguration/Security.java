@@ -21,7 +21,8 @@ public class Security {
     private final UserDetailsServiceImpl userDetailsServiceImpl;
     private final PasswordEncoder passwordEncoder;
     private final JwtAuthFilter jwtAuthFilter;
-    
+    private final String PUBLIC_URLS[]={"/app/**","/v3/api-docs","/v2/api-docs","/swagger-resources/**","/swagger-ui/**","/webjars/**"};
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         http
@@ -30,7 +31,7 @@ public class Security {
             )
             .authorizeHttpRequests((auth)->
                 auth    
-                    .requestMatchers("/app/**").permitAll()
+                    .requestMatchers(PUBLIC_URLS).permitAll()
                     .anyRequest().authenticated()
             )
             .logout((logout)->
