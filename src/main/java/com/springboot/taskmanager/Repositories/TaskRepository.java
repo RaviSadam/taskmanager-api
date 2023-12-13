@@ -70,7 +70,6 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
             @Param("date") Date date);
 
 
-
     @Modifying
     @Transactional
     @Query(value = "UPDATE tasks t " +
@@ -126,12 +125,29 @@ public interface TaskRepository extends JpaRepository<Tasks,String>{
     public List<TaskVisibilityProjection> getTasksVisibility(@Param("taskIds") Set<String> taskIds);
 
 
-//     @Query()
-//     public List<TaskDetailsProjections> getUserAccessedTasks(Pageable page);
+    @Query(value="SELECT  t.created_date AS createddate,t.description AS description,t.due_date AS duedate,t.task_name AS taskname,t.priority AS priority,t.status AS status,t.updated_date AS updateddate,t.visibility AS visibility,t.owner AS owner "+
+                 "FROM user_tasks_access ut " +
+                 "INNER JOIN tasks t " + 
+                 "ON t.task_id=ut.task_id " +
+                 "WHERE ut.username=:username",
+                 countQuery = "SELECT COUNT(*) FROM user_tasks_access ut WHERE ut.username=:username GROUP BY username",
+                 nativeQuery = true)
+    public List<TaskDetailsProjections> getUserAccessedTasks(@Param("username")String username,Pageable page);
     
     @Modifying
     @Transactional
     @Query(value = "CALL user_tasks_access_table (:usernames,:taskId)", nativeQuery = true)
     public void insertUserTasksAccess(@Param("usernames") String usernames, @Param("taskId") String taskId);
+
+
+    @Query("SELECT t.createdDate AS createddate,t.description AS description,t.dueDate AS duedate,t.name AS taskname,t.priority AS priority,t.status AS status,t.updatedDate AS updateddate,t.visibility AS visibility,u.username AS owner,t.taskId AS id FROM Tasks t JOIN t.owner u WHERE u.username=:username")
+    public List<TaskDetailsProjections> getAllTasksForExporting(@Param("username") String usernames);
+
+    @Query(value="SELECT  t.created_date AS createddate,t.description AS description,t.due_date AS duedate,t.task_name AS taskname,t.priority AS priority,t.status AS status,t.updated_date AS updateddate,t.visibility AS visibility,t.owner AS owner,t.task_id AS id "+
+                    "FROM user_tasks_access ut "+
+                    "INNER JOIN tasks t  "+
+                    "ON t.task_id=ut.task_id "+
+                    "WHERE ut.username=:username ", nativeQuery=true)
+    public List<TaskDetailsProjections> getAllAccessedTasksForExport(@Param("username")String usrename);
 
 }

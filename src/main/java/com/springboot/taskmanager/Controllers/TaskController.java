@@ -1,5 +1,6 @@
 package com.springboot.taskmanager.Controllers;
 
+import java.io.IOException;
 import java.util.Set;
 
 import org.springframework.http.ResponseEntity;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-
 import com.springboot.taskmanager.Dto.DeleteTasksRequest;
 import com.springboot.taskmanager.Dto.MessageInfo;
 import com.springboot.taskmanager.Dto.TaskDetails;
@@ -23,6 +23,7 @@ import com.springboot.taskmanager.Dto.UserDataDto;
 import com.springboot.taskmanager.Dto.UserIdsDto;
 import com.springboot.taskmanager.Services.TaskService;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 
@@ -105,6 +106,20 @@ public class TaskController {
     @DeleteMapping("/delete-task")
     public ResponseEntity<MessageInfo> deleteTask(@RequestBody DeleteTasksRequest tasksIds){
         return taskService.deleteTasks(tasksIds);
+    }
+    @GetMapping("/export-tasks")
+    public  void getExcelSheetOfTasks(HttpServletResponse response) throws IOException{
+        System.out.println(taskService.getLoggedinUserName());
+        String fileName=taskService.getLoggedinUserName()+".xlsx";
+        taskService.getExcelSheetOfTasks(response);
+
+        
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+       
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=users_" + fileName;
+        response.setHeader(headerKey, headerValue);
+        return; 
     }
 
 }

@@ -12,6 +12,8 @@ import com.springboot.taskmanager.Dto.UserDataDto;
 import com.springboot.taskmanager.Dto.UserIdsDto;
 import com.springboot.taskmanager.Dto.UserRegistration;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 public interface TaskService {
 
     //addes new task to db
@@ -50,5 +52,10 @@ public interface TaskService {
     public ResponseEntity<Set<TaskResponse>> getAccessTasks(int pageNumber,int pageSize);
 
     public ResponseEntity<MessageInfo> updateUserTaskAccess(TaskUserAccessUpdate taskUserAccessUpdate);
+
+    public void getExcelSheetOfTasks(HttpServletResponse response);
+
+    //return user name
+    public String getLoggedinUserName();
 
 }

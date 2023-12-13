@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 @EnableMethodSecurity
@@ -26,4 +28,13 @@ public class TaskmanagerApplication {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception { 
         return config.getAuthenticationManager(); 
     }
+	@Bean
+	public WebMvcConfigurer configurer(){
+		return new WebMvcConfigurer() {
+			@Override
+			public void addCorsMappings(CorsRegistry corsRegistry){
+				corsRegistry.addMapping("/**").allowedOrigins("*");
+			}
+		};
+	}
 }

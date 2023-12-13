@@ -9,6 +9,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +48,8 @@ import com.springboot.taskmanager.Repositories.UserRepository;
 import com.springboot.taskmanager.Services.TaskService;
 
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -54,6 +61,59 @@ public class TaskServiceImpl implements TaskService{
     private String fileDirectory;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+
+
+    private final String sheetName="Task_data";
+
+    private void taskDataToExcel(List<TaskDetailsProjections> tasks,HttpServletResponse response){
+        try{
+            Workbook workbook=new XSSFWorkbook(); 
+            Sheet sheet=workbook.createSheet(sheetName);
+
+            //headers of excel sheeet
+            Row headerRow=sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("task id");
+            headerRow.createCell(1).setCellValue("taskname");
+            headerRow.createCell(2).setCellValue("owner");
+            headerRow.createCell(3).setCellValue("description");
+            headerRow.createCell(4).setCellValue("duedate");
+            headerRow.createCell(5).setCellValue("createddate"); 
+            headerRow.createCell(6).setCellValue("updateddate");
+            headerRow.createCell(7).setCellValue("priority");
+            headerRow.createCell(8).setCellValue("status"); 
+
+
+            int rowCnt=1;
+            for(TaskDetailsProjections taskDetailsProjections:tasks){
+                Row rowData=sheet.createRow(rowCnt);
+                rowData.createCell(0).setCellValue(taskDetailsProjections.getId());
+                rowData.createCell(1).setCellValue(taskDetailsProjections.getTaskname());
+                rowData.createCell(2).setCellValue(taskDetailsProjections.getOwner());
+                rowData.createCell(3).setCellValue(taskDetailsProjections.getDescription());
+                rowData.createCell(4).setCellValue(taskDetailsProjections.getDuedate());
+                rowData.createCell(5).setCellValue(taskDetailsProjections.getCreateddate()); 
+                rowData.createCell(6).setCellValue(taskDetailsProjections.getUpdateddate());
+                rowData.createCell(7).setCellValue(taskDetailsProjections.getPriority());
+                rowData.createCell(8).setCellValue(taskDetailsProjections.getStatus()); 
+                rowCnt+=1;
+            }
+            ServletOutputStream outputStream=response.getOutputStream();
+            workbook.write(outputStream);
+            outputStream.close();
+            workbook.close();
+        }catch(IOException exception){
+            exception.printStackTrace();
+        }
+    }
+
+    @Override
+    public void getExcelSheetOfTasks(HttpServletResponse response){
+        List<TaskDetailsProjections> taskDetailsProjections2=taskRepository.getAllAccessedTasksForExport(this.getLoggedinUserName());
+        List<TaskDetailsProjections> taskDetailsProjections1=taskRepository.getAllTasksForExporting(this.getLoggedinUserName());
+        taskDetailsProjections1.addAll(taskDetailsProjections2);
+        this.taskDataToExcel(taskDetailsProjections1,response);
+    }
+
 
 
 
@@ -72,25 +132,25 @@ public class TaskServiceImpl implements TaskService{
 
     @Override
     public ResponseEntity<Set<TaskResponse>> getAccessTasks(int pageNumber,int pageSize){
-        // Pageable page=PageRequest.of(pageNumber, pageSize);
-        // List<TaskDetailsProjections> taskDetailsProjectionss=taskRepository.getUserAccessedTasks(page);
-        // Set<TaskResponse> taskResponses=new HashSet<>();
-        // for(TaskDetailsProjections taskDetailsProjections:taskDetailsProjectionss){
-        //     taskResponses.add(
-        //             TaskResponse.builder()
-        //                 .createddate(taskDetailsProjections.getCreateddate())
-        //                 .description(taskDetailsProjections.getDescription())
-        //                 .duedate(taskDetailsProjections.getDuedate())
-        //                 .priority(taskDetailsProjections.getPriority())
-        //                 .status(taskDetailsProjections.getStatus())
-        //                 .taskname(taskDetailsProjections.getTaskname())
-        //                 .updateddate(taskDetailsProjections.getUpdateddate())
-        //                 .owner(taskDetailsProjections.getOwner())
-        //                 .build()
+        Pageable page=PageRequest.of(pageNumber, pageSize);
+        List<TaskDetailsProjections> taskDetailsProjectionss=taskRepository.getUserAccessedTasks(this.getLoggedinUserName(),page);
+        Set<TaskResponse> taskResponses=new HashSet<>();
+        for(TaskDetailsProjections taskDetailsProjections:taskDetailsProjectionss){
+            taskResponses.add(
+                    TaskResponse.builder()
+                        .createddate(taskDetailsProjections.getCreateddate())
+                        .description(taskDetailsProjections.getDescription())
+                        .duedate(taskDetailsProjections.getDuedate())
+                        .priority(taskDetailsProjections.getPriority())
+                        .status(taskDetailsProjections.getStatus())
+                        .taskname(taskDetailsProjections.getTaskname())
+                        .updateddate(taskDetailsProjections.getUpdateddate())
+                        .owner(taskDetailsProjections.getOwner())
+                        .build()
 
-        //     );
-        // }
-        return ResponseEntity.ok().body(null);
+            );
+        }
+        return ResponseEntity.ok().body(taskResponses);
     }
 
     //delete task by ids
@@ -346,7 +406,7 @@ public class TaskServiceImpl implements TaskService{
     }
 
     //return logged in username
-    private String getLoggedinUserName(){
+    public String getLoggedinUserName(){
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
     private Date getDate(){

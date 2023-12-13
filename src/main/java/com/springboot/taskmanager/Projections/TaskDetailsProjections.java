@@ -11,4 +11,5 @@ public interface TaskDetailsProjections {
     String getPriority();
     String getStatus();
     String getOwner();
+    String getId();
 }
